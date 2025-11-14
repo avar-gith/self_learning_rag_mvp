@@ -1,0 +1,23 @@
+# Django keretrendszer
+Django>=5.0
+
+# Elasticsearch Python kliens (lokális ES-hez)
+elasticsearch>=8.12.0
+
+# Embeddinghez és modellhíváshoz
+openai>=1.30.0
+
+# Szövegfeldolgozáshoz (chunking, tokenek)
+nltk>=3.9.0
+
+# Környezeti változók kezelése
+python-dotenv>=1.0.1
+
+# Adatmanipuláció (nem kötelező, de RAG-ben gyakorlatilag nélkülözhetetlen)
+pandas>=2.2.0
+
+# HTTP hívásokhoz, ha szükséges (ES health-check, saját API-k)
+requests>=2.31.0
+
+# MD formátum kezelés (megjelenítés)
+markdown>=3.6

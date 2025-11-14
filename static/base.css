@@ -1,0 +1,122 @@
+/* file: static/base.css */
+/* ===================================================================
+   Globális alapszínek és layout beállítások
+   =================================================================== */
+
+body {
+    background-color: #f8f9fa;
+    color: #333;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: "Inter", "Segoe UI", "Roboto", sans-serif;
+}
+
+/* ===================================================================
+   Telekom-magenta fejléc
+   =================================================================== */
+header {
+    background-color: #E20074;
+    color: white;
+    padding: 16px;
+}
+
+/* ===================================================================
+   Tartalomdobozok
+   =================================================================== */
+.content-box {
+    background: #eef3f8;
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+/* ===================================================================
+   Link stílusok
+   =================================================================== */
+a {
+    color: #E20074;
+    text-decoration: none;
+}
+a:hover {
+    color: #b3005c;
+    text-decoration: underline;
+}
+
+/* ===================================================================
+   Sticky lábléc
+   =================================================================== */
+.footer {
+    margin-top: auto;
+    padding: 20px;
+    font-size: 0.9rem;
+    color: #777;
+    text-align: center;
+    background-color: #fafafa;
+    border-top: 1px solid #e5e5e5;
+}
+
+/* ===================================================================
+   Form elemek – egységes Telekom stílus
+   =================================================================== */
+
+input[type="text"],
+textarea,
+select,
+.form-control,
+.form-select {
+    border: 2px solid #E20074;
+    border-radius: 6px;
+    padding: 8px;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: #b3005c !important;
+    box-shadow: 0 0 0 0.2rem rgba(226, 0, 116, 0.25);
+}
+
+/* ===================================================================
+   Magenta gomb
+   =================================================================== */
+.btn-magenta {
+    background-color: #E20074;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    font-weight: 500;
+    border-radius: 6px;
+}
+.btn-magenta:hover {
+    background-color: #b3005c;
+    color: white;
+}
+
+/* ===================================================================
+   LLM selector – minimal Telekom stílus
+   =================================================================== */
+.llm-select {
+    max-width: 300px;
+    cursor: pointer;
+}
+
+/* ===================================================================
+   Chat UI elemek
+   =================================================================== */
+
+#chat_input {
+    resize: vertical;
+}
+
+#chat_response {
+    background: white;
+    border: 1px solid #ddd;
+    min-height: 80px;
+    border-radius: 6px;
+}
+
+/* Loading állapothoz használható spinner szín előkészítve */
+.spinner-magenta {
+    color: #E20074 !important;
+}

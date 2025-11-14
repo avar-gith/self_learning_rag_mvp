@@ -1,0 +1,43 @@
+<!-- file: templates/base.html -->
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Példa RAG Projekt{% endblock %}</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Saját stílus -->
+    <link rel="stylesheet" href="{% static 'base.css' %}">
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <h1 class="h3 m-0">Példa RAG Projekt</h1>
+    </div>
+</header>
+
+<main class="container my-4">
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="footer d-flex justify-content-between align-items-center flex-wrap">
+    <div class="footer-main">
+        Telekom Tudásmegosztás – Példa RAG rendszer bemutató célokra
+    </div>
+
+    <div class="footer-contact text-muted small mt-2 mt-sm-0">
+        Kapcsolat: 
+        <a href="mailto:holub.norbert@telekom.hu">holub.norbert@telekom.hu</a>
+        &nbsp;|&nbsp;
+        Discord: _avar_ (Avar#6976)
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

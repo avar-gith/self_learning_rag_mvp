@@ -1,0 +1,23 @@
+<!-- file: templates/ai/test.html -->
+{% extends "base.html" %}
+
+{% block title %}AI Teszt – Példa RAG Projekt{% endblock %}
+
+{% block content %}
+
+<div class="content-box mb-4">
+    <h2 class="mb-3">AI Tesztfelület</h2>
+
+    <p class="text-muted">
+        Válaszd ki, melyik LLM-et szeretnéd használni, majd írd be a kérdésedet a chat mezőbe.
+        A rendszer jelenleg három modellt támogat: PlutoAI, OpenAI és Perplexity.
+    </p>
+</div>
+
+<!-- LLM-választó kártya -->
+{% include "components/llm_selector.html" %}
+
+<!-- Chat UI komponens -->
+{% include "components/chat_ui.html" %}
+
+{% endblock %}

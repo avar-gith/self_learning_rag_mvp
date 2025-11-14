@@ -1,0 +1,89 @@
+<!-- file: templates/components/chat_ui.html -->
+<div class="content-box mb-4">
+    <h4 class="mb-3">Chat</h4>
+
+    <!-- User input -->
+    <label for="chat_input" class="form-label">Írd be az üzeneted:</label>
+    <textarea id="chat_input" class="form-control mb-3" rows="3"
+              placeholder="Írd ide a kérdésed..."></textarea>
+
+    <!-- Send button -->
+    <button id="chat_send_btn" class="btn btn-magenta d-flex align-items-center gap-2">
+        <span id="chat_send_text">Küldés</span>
+        <div id="chat_send_spinner" class="spinner-border spinner-border-sm text-light" 
+             style="display:none;" role="status"></div>
+    </button>
+
+    <!-- Response box -->
+    <div id="chat_response"
+         class="mt-4 p-3 border rounded bg-white shadow-sm"
+         style="display:none; border-left: 5px solid #E20074;">
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const sendBtn = document.getElementById("chat_send_btn");
+    const sendText = document.getElementById("chat_send_text");
+    const spinner = document.getElementById("chat_send_spinner");
+
+    const input = document.getElementById("chat_input");
+    const responseBox = document.getElementById("chat_response");
+
+    sendBtn.addEventListener("click", async function () {
+        const message = input.value.trim();
+        const llm = document.getElementById("llm_select")?.value || "pluto";
+
+        if (!message) return;
+
+        // Gomb állapot frissítése: spinner bekapcsol
+        sendBtn.disabled = true;
+        sendText.innerText = "Válasz generálása...";
+        spinner.style.display = "inline-block";
+
+        // Előző válasz tisztítása
+        responseBox.style.display = "none";
+        responseBox.innerHTML = "";
+
+        try {
+            const resp = await fetch("/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    llm: llm,
+                    message: message
+                }),
+            });
+
+            const data = await resp.json();
+
+            responseBox.style.display = "block";
+
+            if (data.status === "ok") {
+                responseBox.innerHTML = `
+                    <strong class="mb-2 d-block">Válasz (${llm}):</strong>
+                    <div class="mt-2">${data.answer}</div>
+                `;
+            } else {
+                responseBox.innerHTML = `
+                    <strong>Hiba:</strong> ${data.message}
+                `;
+            }
+
+            // Automatikus görgetés a válaszhoz
+            responseBox.scrollIntoView({ behavior: "smooth" });
+
+        } catch (e) {
+            responseBox.style.display = "block";
+            responseBox.innerHTML = `
+                <strong>Hiba történt:</strong> ${e}
+            `;
+        }
+
+        // Gomb visszaállítása
+        sendBtn.disabled = false;
+        sendText.innerText = "Küldés";
+        spinner.style.display = "none";
+    });
+});
+</script>
