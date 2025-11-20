@@ -1,0 +1,21 @@
+<!-- file: templates/components/rag_settings.html -->
+<div class="content-box mb-4">
+    <h4 class="mb-3">RAG beállítások</h4>
+
+    <div class="row g-3">
+
+        <div class="col-md-4">
+            <label class="form-label" for="rag_top_k">TOP-K:</label>
+            <input type="number" id="rag_top_k" class="form-control" min="1" value="5">
+            <div class="form-text">Ennyi legjobb chunkot használ fel a rendszer.</div>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label" for="rag_threshold">Hasonlósági küszöb:</label>
+            <input type="number" id="rag_threshold" class="form-control"
+                   step="0.01" min="0" max="1" value="0.35">
+            <div class="form-text">Minimális cosine similarity érték.</div>
+        </div>
+
+    </div>
+</div>

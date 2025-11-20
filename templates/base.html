@@ -15,10 +15,51 @@
 </head>
 <body>
 
-<header>
-    <div class="container">
-        <h1 class="h3 m-0">Példa RAG Projekt</h1>
-    </div>
+<!-- Felső fejléc + menü -->
+<header class="mb-0">
+    <nav class="navbar navbar-expand-lg" style="background-color:#E20074;">
+        <div class="container">
+
+            <!-- Projekt cím -->
+            <a class="navbar-brand text-white fw-bold" href="/">
+                Példa RAG Projekt
+            </a>
+
+            <!-- Hamburger gomb mobilon -->
+            <button class="navbar-toggler text-white" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#mainMenu"
+                    aria-controls="mainMenu" aria-expanded="false" aria-label="Navigáció">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Menüelemek -->
+            <div class="collapse navbar-collapse" id="mainMenu">
+                <ul class="navbar-nav ms-auto">
+
+                    <!-- Főoldal -->
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="/">Főoldal</a>
+                    </li>
+
+                    <!-- AI Teszt -->
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="/ai/test">AI Tesztfelület</a>
+                    </li>
+
+                    <!-- RAG Teszt -->
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="/ai/rag-test">RAG Tesztfelület</a>
+                    </li>
+
+                    <!-- Admin (Beállítások) -->
+                    <li class="nav-item">
+                        <a class="nav-link text-white fw-bold" href="/admin/">Beállítások</a>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </nav>
 </header>
 
 <main class="container my-4">
@@ -31,7 +72,7 @@
     </div>
 
     <div class="footer-contact text-muted small mt-2 mt-sm-0">
-        Kapcsolat: 
+        Kapcsolat:
         <a href="mailto:holub.norbert@telekom.hu">holub.norbert@telekom.hu</a>
         &nbsp;|&nbsp;
         Discord: _avar_ (Avar#6976)

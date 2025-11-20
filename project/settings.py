@@ -40,8 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Alkalmazások
+    # Saját alkalmazások (mind Config formátumban)
     'core.apps.CoreConfig',
+    'knowledge.apps.KnowledgeConfig',
 ]
 
 

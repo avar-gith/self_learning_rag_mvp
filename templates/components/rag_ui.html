@@ -1,0 +1,135 @@
+<!-- file: templates/components/rag_ui.html -->
+
+<div class="content-box mb-4">
+    <h4 class="mb-3">Kérdés</h4>
+
+    <textarea id="rag_query" class="form-control mb-3" rows="3"
+              placeholder="Írd ide a kérdésed..."></textarea>
+
+    <button id="rag_search_btn" class="btn btn-magenta d-flex align-items-center gap-2">
+        <span id="rag_search_text">Keresés</span>
+        <div id="rag_search_spinner" class="spinner-border spinner-border-sm text-light"
+             style="display:none;" role="status"></div>
+    </button>
+</div>
+
+<!-- Klasszikus találatok -->
+<div id="rag_classic_results" class="content-box mb-4" style="display:none;">
+    <h4 class="mb-3">Klasszikus keresés eredményei</h4>
+    <ul id="rag_classic_list" class="list-group"></ul>
+</div>
+
+<!-- Embedding találatok -->
+<div id="rag_embedding_results" class="content-box mb-4" style="display:none;">
+    <h4 class="mb-3">Embedding találatok</h4>
+    <ul id="rag_embedding_list" class="list-group"></ul>
+</div>
+
+<!-- LLM válasz -->
+<div id="rag_final_answer" class="content-box mb-4" style="display:none;">
+    <h4 class="mb-3">Rendszer válasza</h4>
+    <div id="rag_answer_box"
+         class="p-3 border rounded bg-white shadow-sm"
+         style="border-left: 5px solid #E20074;"></div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const btn = document.getElementById("rag_search_btn");
+    const text = document.getElementById("rag_search_text");
+    const spinner = document.getElementById("rag_search_spinner");
+
+    const queryInput = document.getElementById("rag_query");
+    const topKInput  = document.getElementById("rag_top_k");
+    const thresholdInput = document.getElementById("rag_threshold");
+    const llmSelect = document.getElementById("llm_select");
+
+    const classicBox = document.getElementById("rag_classic_results");
+    const classicList = document.getElementById("rag_classic_list");
+
+    const embeddingBox = document.getElementById("rag_embedding_results");
+    const embeddingList = document.getElementById("rag_embedding_list");
+
+    const answerBoxContainer = document.getElementById("rag_final_answer");
+    const answerBox = document.getElementById("rag_answer_box");
+
+    btn.addEventListener("click", async function () {
+        const query = queryInput.value.trim();
+        if (!query) return;
+
+        const topK = parseInt(topKInput.value || "5");
+        const threshold = parseFloat(thresholdInput.value || "0.35");
+        const llm = llmSelect.value || "openai";
+
+        // UI reset
+        btn.disabled = true;
+        text.innerText = "Keresés folyamatban...";
+        spinner.style.display = "inline-block";
+
+        classicBox.style.display = "none";
+        embeddingBox.style.display = "none";
+        answerBoxContainer.style.display = "none";
+
+        classicList.innerHTML = "";
+        embeddingList.innerHTML = "";
+        answerBox.innerHTML = "";
+
+        try {
+            const resp = await fetch("/api/rag", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    query: query,
+                    top_k: topK,
+                    threshold: threshold,
+                    llm: llm
+                })
+            });
+
+            const data = await resp.json();
+
+            // Klasszikus találatok
+            if (data.classic_results) {
+                classicBox.style.display = "block";
+                data.classic_results.forEach(item => {
+                    classicList.innerHTML += `
+                        <li class="list-group-item">
+                            <strong>${item.title}</strong><br>
+                            <span class="text-muted small">${item.snippet}</span>
+                        </li>
+                    `;
+                });
+            }
+
+            // Embedding találatok
+            if (data.embedding_results) {
+                embeddingBox.style.display = "block";
+                data.embedding_results.forEach(res => {
+                    const css = res.is_above ? "" : "opacity-50";
+                    embeddingList.innerHTML += `
+                        <li class="list-group-item ${css}">
+                            <strong>Score: ${res.score.toFixed(3)}</strong><br>
+                            ${res.chunk}
+                        </li>
+                    `;
+                });
+            }
+
+            // Végső válasz
+            if (data.final_answer) {
+                answerBoxContainer.style.display = "block";
+                answerBox.innerHTML = data.final_answer;
+            }
+
+        } catch (e) {
+            answerBoxContainer.style.display = "block";
+            answerBox.innerHTML = `<strong>Hiba:</strong> ${e}`;
+        }
+
+        // Reset UI
+        btn.disabled = false;
+        text.innerText = "Keresés";
+        spinner.style.display = "none";
+    });
+});
+</script>
