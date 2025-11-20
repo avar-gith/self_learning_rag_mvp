@@ -40,22 +40,66 @@ def rag_view(request):
                 status=400
             )
 
-        # Klasszikus keresés
-        classic_items = KnowledgeItem.objects.filter(
+        # ---------------------------------------------------------------------
+        # SMART Classic Search
+        # ---------------------------------------------------------------------
+        query_lower = query.lower()
+
+        # 1) Elsődleges szűrés: title, content, anonymized_content, chunks
+        classic_raw = KnowledgeItem.objects.filter(
             Q(title__icontains=query) |
             Q(content__icontains=query) |
-            Q(anonymized_content__icontains=query)
-        ).order_by("-created_at")[:5]
+            Q(anonymized_content__icontains=query) |
+            Q(chunks__content__icontains=query)
+        ).distinct()
 
+        smart_results = []
+
+        for item in classic_raw:
+            title = item.title or ""
+            content = item.content or ""
+            anon = item.anonymized_content or ""
+            chunk_texts = " ".join(c.content for c in item.chunks.all())
+
+            score = 0
+
+            # Title találat (jelentős relevancia)
+            if query_lower in title.lower():
+                score += 5
+
+            # Content találat
+            if query_lower in content.lower():
+                score += 3
+
+            # Anon tartalom (ha létezik)
+            if anon and query_lower in anon.lower():
+                score += 2
+
+            # Chunk találatok (minden előfordulás számít)
+            score += chunk_texts.lower().count(query_lower) * 1
+
+            # Hossz korrekció (rövidebb tartalom → jobban illik)
+            if len(content) > 0:
+                score += max(0, 2 - (len(content) / 1000))
+
+            smart_results.append((item, score))
+
+        # 2) Rangsorolás
+        smart_results.sort(key=lambda x: x[1], reverse=True)
+
+        # 3) TOP 5 classic találat visszaadása
         classic_results = [
             {
                 "title": item.title,
-                "snippet": (item.anonymized_content or item.content)[:160] + "..."
+                "snippet": (item.anonymized_content or item.content)[:200] + "...",
+                "score": round(score, 2),
             }
-            for item in classic_items
+            for item, score in smart_results[:5]
         ]
 
+        # ---------------------------------------------------------------------
         # Embedding keresés
+        # ---------------------------------------------------------------------
         rag = RAGService()
         embedding_hits = rag.search(query=query, top_k=top_k, threshold=threshold)
 
@@ -68,10 +112,14 @@ def rag_view(request):
             for chunk, score in embedding_hits
         ]
 
-        # Prompt
+        # ---------------------------------------------------------------------
+        # Prompt összeállítás
+        # ---------------------------------------------------------------------
         prompt = build_prompt(query=query, rag_results=embedding_hits)
 
+        # ---------------------------------------------------------------------
         # LLM hívás
+        # ---------------------------------------------------------------------
         try:
             client = get_ai_client(llm)
             raw_answer = client.chat(prompt)
@@ -88,6 +136,9 @@ def rag_view(request):
         except Exception as e:
             final_answer = f"<strong>Hiba a LLM hívásban:</strong> {e}"
 
+        # ---------------------------------------------------------------------
+        # JSON válasz
+        # ---------------------------------------------------------------------
         return JsonResponse({
             "status": "ok",
             "classic_results": classic_results,
@@ -96,4 +147,7 @@ def rag_view(request):
         })
 
     except Exception as e:
-        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+        return JsonResponse(
+            {"status": "error", "message": str(e)},
+            status=500
+        )

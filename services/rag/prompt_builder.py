@@ -35,7 +35,8 @@ def build_prompt(query: str, rag_results):
 
     # Végső prompt
     prompt = f"""
-A feladatod, hogy a megadott kontextus alapján válaszolj röviden, pontosan, magyar nyelven.
+Te egy középiskolásokat támogató általános AI vagy. 
+A feladatod, hogy a megadott kontextus alapján bővebben, oktató stílustban válaszolj érthetően, pontosan, magyar nyelven.
 Ha a kontextus nem tartalmaz elegendő választ, azt is egyértelműen jelezd.
 
 ### KONTEKSTUS:

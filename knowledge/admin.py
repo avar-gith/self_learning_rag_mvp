@@ -11,88 +11,6 @@ from .models import (
     KnowledgeSettings,
 )
 
-
-# -------------------------------------------------------------------------
-# Admin ACTIONS – Példa tudás betöltése / törlése
-# -------------------------------------------------------------------------
-
-@admin.action(description="Példa Fizika tudás betöltése")
-def load_sample_physics(modeladmin, request, queryset):
-    """
-    Betölti a 'Fizika' kategóriát és 10 alap tudáselemet.
-    """
-
-    physics_items = [
-        ("Newton törvényei", "A klasszikus mechanika három alapvető törvénye..."),
-        ("Relativitáselmélet", "Einstein elmélete a téridőről..."),
-        ("Fénysebesség", "Vákuumban: 299 792 458 m/s."),
-        ("Gravitáció", "Tömegek közötti vonzóerő."),
-        ("Kvantummechanika", "A részecskék kvantumos viselkedését írja le."),
-        ("Fekete lyukak", "Gravitációs anomáliák, ahonnan a fény sem tud kijutni."),
-        ("Atommodellek", "Bohr-modell, kvantummechanikai modell stb."),
-        ("Foton", "Az elektromágneses sugárzás kvantuma."),
-        ("Hullám-részecske kettősség", "Részek egyszerre hullám és részecske."),
-        ("Standard Modell", "A részecskefizika jelenlegi elméleti keretrendszere."),
-    ]
-
-    try:
-        with transaction.atomic():
-
-            category, _ = KnowledgeCategory.objects.get_or_create(
-                name="Fizika",
-                defaults={"description": "Alap fizikai jelenségek és fogalmak."}
-            )
-
-            created_count = 0
-
-            for title, content in physics_items:
-                obj, was_created = KnowledgeItem.objects.get_or_create(
-                    title=title,
-                    defaults={
-                        "content": content,
-                        "category": category,
-                        "is_active": True,
-                    }
-                )
-                if was_created:
-                    created_count += 1
-
-        messages.success(
-            request,
-            f"✔ Példa fizika tudás betöltve ({created_count} új elem)."
-        )
-
-    except Exception as e:
-        messages.error(request, f"❌ Hiba történt: {e}")
-
-
-@admin.action(description="Példa Fizika tudás törlése")
-def delete_sample_physics(modeladmin, request, queryset):
-    """
-    Törli a 'Fizika' kategóriát és minden hozzá tartozó elemet.
-    """
-
-    try:
-        with transaction.atomic():
-
-            category = KnowledgeCategory.objects.filter(name="Fizika").first()
-
-            if category:
-                deleted_items = KnowledgeItem.objects.filter(category=category).count()
-                KnowledgeItem.objects.filter(category=category).delete()
-                category.delete()
-
-                messages.success(
-                    request,
-                    f"✔ Fizika kategória és {deleted_items} tudáselem törölve."
-                )
-            else:
-                messages.info(request, "ℹ Nincs 'Fizika' kategória, nincs mit törölni.")
-
-    except Exception as e:
-        messages.error(request, f"❌ Hiba történt: {e}")
-
-
 # -------------------------------------------------------------------------
 # Kategória admin
 # -------------------------------------------------------------------------
@@ -111,7 +29,7 @@ class KnowledgeCategoryAdmin(admin.ModelAdmin):
 
 
 # -------------------------------------------------------------------------
-# Tudáselem admin
+# Tudáselem admin – fizika betöltés/törlés ACTIONOK NÉLKÜL
 # -------------------------------------------------------------------------
 @admin.register(KnowledgeItem)
 class KnowledgeItemAdmin(admin.ModelAdmin):
@@ -121,7 +39,8 @@ class KnowledgeItemAdmin(admin.ModelAdmin):
     readonly_fields = ("slug", "created_at", "updated_at")
     ordering = ("-created_at",)
 
-    actions = [load_sample_physics, delete_sample_physics]
+    # ⚠️ A korábbi fizika betöltés/törlés actionök eltávolítva
+    actions = []
 
     fieldsets = (
         ("Alapadatok", {

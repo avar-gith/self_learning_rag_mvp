@@ -15,7 +15,7 @@ class OpenAIClient(BaseClient):
             raise ValueError("❌ OPENAI_API_KEY nincs beállítva!")
 
         self.chat_model = settings.OPENAI_SETTINGS.get("model", "gpt-4o-mini")
-        self.embedding_model = "text-embedding-3-small"
+        self.embedding_model = "text-embedding-3-large"
 
         self.client = OpenAI(api_key=api_key)
 

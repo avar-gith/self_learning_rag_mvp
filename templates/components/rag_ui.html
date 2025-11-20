@@ -88,9 +88,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const data = await resp.json();
 
+            // ----------------------------------------------------------------
             // Klasszikus találatok
-            if (data.classic_results) {
+            // ----------------------------------------------------------------
+            if (data.classic_results && data.classic_results.length > 0) {
                 classicBox.style.display = "block";
+                classicList.innerHTML = "";
+
                 data.classic_results.forEach(item => {
                     classicList.innerHTML += `
                         <li class="list-group-item">
@@ -99,11 +103,23 @@ document.addEventListener("DOMContentLoaded", function () {
                         </li>
                     `;
                 });
+
+            } else {
+                classicBox.style.display = "block";
+                classicList.innerHTML = `
+                    <li class="list-group-item text-muted">
+                        Nincs klasszikus találat.
+                    </li>
+                `;
             }
 
+            // ----------------------------------------------------------------
             // Embedding találatok
-            if (data.embedding_results) {
+            // ----------------------------------------------------------------
+            if (data.embedding_results && data.embedding_results.length > 0) {
                 embeddingBox.style.display = "block";
+                embeddingList.innerHTML = "";
+
                 data.embedding_results.forEach(res => {
                     const css = res.is_above ? "" : "opacity-50";
                     embeddingList.innerHTML += `
@@ -113,9 +129,19 @@ document.addEventListener("DOMContentLoaded", function () {
                         </li>
                     `;
                 });
+
+            } else {
+                embeddingBox.style.display = "block";
+                embeddingList.innerHTML = `
+                    <li class="list-group-item text-muted">
+                        Nincs embedding találat.
+                    </li>
+                `;
             }
 
-            // Végső válasz
+            // ----------------------------------------------------------------
+            // LLM végső válasz
+            // ----------------------------------------------------------------
             if (data.final_answer) {
                 answerBoxContainer.style.display = "block";
                 answerBox.innerHTML = data.final_answer;
