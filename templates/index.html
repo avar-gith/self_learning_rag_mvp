@@ -2,14 +2,81 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Kezdőlap – Példa RAG Projekt{% endblock %}
+{% block title %}Kezdőlap – RAG Demó Rendszer{% endblock %}
 
 {% block content %}
 <div class="content-box">
-    <h2 class="mb-3">Üdv a Példa RAG projektben!</h2>
+    <h2 class="mb-3">Üdv a RAG Demó Rendszerben!</h2>
+
     <p>
-        Ez a kezdőoldal egy minta-projekt része, amely a RAG folyamat felépítésének és működésének
-        bemutatására szolgál — informális tudásmegosztási céllal.
+        Ez az alkalmazás egy olyan oktató és bemutató célú projekt,
+        amely a <strong>Retrieval-Augmented Generation (RAG)</strong> működését szemlélteti.
+        A rendszer végigvezet a tudásbázisokkal kapcsolatos alapvető műveleteken
+        és megmutatja, hogyan képes egy LLM a háttérben lévő strukturált tudást
+        felhasználni a pontosabb, kontextus-alapú válaszok generálásához.
+    </p>
+
+    <hr>
+
+    <h4 class="mt-4">Mit mutat be ez a rendszer?</h4>
+    <ul>
+        <li>
+            <strong>Tudásbázis-kezelés</strong> – kategóriák, tudáselemek és
+            automatikusan generált chunkok kezelése.
+        </li>
+        <li>
+            <strong>Chunking (darabolás)</strong> – a hosszabb szövegek logikus részekre bontása,
+            hogy az LLM-ek hatékonyabban tudjanak keresni bennük.
+        </li>
+        <li>
+            <strong>Embedding készítés</strong> – a rendszer minden chunkra
+            vektort generál, amely lehetővé teszi a hasonlóság-alapú keresést.
+        </li>
+        <li>
+            <strong>Anonimizálás</strong> – opcionálisan minden tudáselem automatikusan
+            PII-mentesített változatot is kap, amelyet a RAG pipeline használhat.
+        </li>
+        <li>
+            <strong>Klasszikus + Embedding keresés</strong> – a tesztfelület megmutatja,
+            hogyan működik együtt a hagyományos szövegkeresés és az embedding-alapú relevancia-értékelés.
+        </li>
+        <li>
+            <strong>LLM válasz támogatása</strong> – a rendszer összegyűjti
+            a releváns chunkokat, majd egy strukturált prompton keresztül
+            segíti az LLM-et pontos, kontextusos választ adni.
+        </li>
+        <li>
+            <strong>Kategóriadetektálás LLM-mel</strong> – a felhasználói kérdés alapján
+            a rendszer automatikusan meghatározza, mely tudáskategória releváns.
+        </li>
+    </ul>
+
+    <hr>
+
+    <h4 class="mt-4">Hol lehet kipróbálni?</h4>
+    <p>
+        A felső menüben található <strong>RAG Teszt</strong> és
+        <strong>AI Teszt</strong> oldalak segítségével könnyedén
+        kipróbálhatod az egyes funkciókat:
+    </p>
+
+    <ul>
+        <li>
+            <a href="/ai/rag-test"><strong>RAG Teszt:</strong></a>
+            klasszikus keresés, embedding találatok, kategóriadetektálás és LLM válasz egy helyen.
+        </li>
+        <li>
+            <a href="/ai/test"><strong>AI Teszt:</strong></a>
+            egyszerű LLM chat több providerrel.
+        </li>
+    </ul>
+
+    <hr>
+
+    <p class="text-muted">
+        Ez a rendszer oktatási és fejlesztési célokat szolgál, és alapul szolgálhat
+        vállalati tudásbázisok, chatbotok, keresőmotorok és AI-alapú ügyfélszolgálati
+        rendszerek fejlesztéséhez.
     </p>
 </div>
 {% endblock %}

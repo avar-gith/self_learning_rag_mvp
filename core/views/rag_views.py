@@ -10,6 +10,7 @@ from django.db.models import Q
 
 from services.rag.rag_service import RAGService
 from services.rag.prompt_builder import build_prompt
+from services.rag.category_detector import CategoryDetector   # <-- HELYES!
 from services.ai_provider import get_ai_client
 from knowledge.models import KnowledgeItem
 
@@ -24,7 +25,10 @@ def rag_view(request):
     """RAG keresési API végpont."""
 
     if request.method != "POST":
-        return JsonResponse({"status": "error", "message": "POST kérés szükséges."}, status=405)
+        return JsonResponse(
+            {"status": "error", "message": "POST kérés szükséges."},
+            status=405
+        )
 
     try:
         body = json.loads(request.body)
@@ -41,11 +45,16 @@ def rag_view(request):
             )
 
         # ---------------------------------------------------------------------
-        # SMART Classic Search
+        # 1) Kategória felismerés LLM segítségével
+        # ---------------------------------------------------------------------
+        detector = CategoryDetector(llm_provider=llm)
+        detected_category = detector.detect_category(query)
+
+        # ---------------------------------------------------------------------
+        # 2) SMART Classic Search
         # ---------------------------------------------------------------------
         query_lower = query.lower()
 
-        # 1) Elsődleges szűrés: title, content, anonymized_content, chunks
         classic_raw = KnowledgeItem.objects.filter(
             Q(title__icontains=query) |
             Q(content__icontains=query) |
@@ -63,31 +72,22 @@ def rag_view(request):
 
             score = 0
 
-            # Title találat (jelentős relevancia)
             if query_lower in title.lower():
                 score += 5
-
-            # Content találat
             if query_lower in content.lower():
                 score += 3
-
-            # Anon tartalom (ha létezik)
             if anon and query_lower in anon.lower():
                 score += 2
 
-            # Chunk találatok (minden előfordulás számít)
             score += chunk_texts.lower().count(query_lower) * 1
 
-            # Hossz korrekció (rövidebb tartalom → jobban illik)
             if len(content) > 0:
                 score += max(0, 2 - (len(content) / 1000))
 
             smart_results.append((item, score))
 
-        # 2) Rangsorolás
         smart_results.sort(key=lambda x: x[1], reverse=True)
 
-        # 3) TOP 5 classic találat visszaadása
         classic_results = [
             {
                 "title": item.title,
@@ -98,10 +98,14 @@ def rag_view(request):
         ]
 
         # ---------------------------------------------------------------------
-        # Embedding keresés
+        # 3) Embedding keresés (változatlan)
         # ---------------------------------------------------------------------
         rag = RAGService()
-        embedding_hits = rag.search(query=query, top_k=top_k, threshold=threshold)
+        embedding_hits = rag.search(
+            query=query,
+            top_k=top_k,
+            threshold=threshold
+        )
 
         embedding_results = [
             {
@@ -113,12 +117,12 @@ def rag_view(request):
         ]
 
         # ---------------------------------------------------------------------
-        # Prompt összeállítás
+        # 4) Prompt összeállítás
         # ---------------------------------------------------------------------
         prompt = build_prompt(query=query, rag_results=embedding_hits)
 
         # ---------------------------------------------------------------------
-        # LLM hívás
+        # 5) LLM hívás
         # ---------------------------------------------------------------------
         try:
             client = get_ai_client(llm)
@@ -137,10 +141,11 @@ def rag_view(request):
             final_answer = f"<strong>Hiba a LLM hívásban:</strong> {e}"
 
         # ---------------------------------------------------------------------
-        # JSON válasz
+        # 6) JSON válasz – kategóriát is visszaadjuk
         # ---------------------------------------------------------------------
         return JsonResponse({
             "status": "ok",
+            "detected_category": detected_category,
             "classic_results": classic_results,
             "embedding_results": embedding_results,
             "final_answer": final_answer,

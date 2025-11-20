@@ -13,6 +13,13 @@
     </button>
 </div>
 
+<!-- Felismert kategória (új elem) -->
+<div id="rag_detected_category_box" class="content-box mb-4" style="display:none;">
+    <h4 class="mb-3">Felismerett kategória</h4>
+    <div id="rag_detected_category"
+         class="p-2 border rounded bg-light"></div>
+</div>
+
 <!-- Klasszikus találatok -->
 <div id="rag_classic_results" class="content-box mb-4" style="display:none;">
     <h4 class="mb-3">Klasszikus keresés eredményei</h4>
@@ -35,6 +42,7 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+
     const btn = document.getElementById("rag_search_btn");
     const text = document.getElementById("rag_search_text");
     const spinner = document.getElementById("rag_search_spinner");
@@ -43,6 +51,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const topKInput  = document.getElementById("rag_top_k");
     const thresholdInput = document.getElementById("rag_threshold");
     const llmSelect = document.getElementById("llm_select");
+
+    const categoryBox = document.getElementById("rag_detected_category_box");
+    const categoryLabel = document.getElementById("rag_detected_category");
 
     const classicBox = document.getElementById("rag_classic_results");
     const classicList = document.getElementById("rag_classic_list");
@@ -66,6 +77,9 @@ document.addEventListener("DOMContentLoaded", function () {
         text.innerText = "Keresés folyamatban...";
         spinner.style.display = "inline-block";
 
+        categoryBox.style.display = "none";
+        categoryLabel.innerHTML = "";
+
         classicBox.style.display = "none";
         embeddingBox.style.display = "none";
         answerBoxContainer.style.display = "none";
@@ -87,6 +101,14 @@ document.addEventListener("DOMContentLoaded", function () {
             });
 
             const data = await resp.json();
+
+            // ----------------------------------------------------------------
+            // Felismert kategória
+            // ----------------------------------------------------------------
+            if (data.detected_category) {
+                categoryLabel.innerHTML = `<strong>${data.detected_category}</strong>`;
+                categoryBox.style.display = "block";
+            }
 
             // ----------------------------------------------------------------
             // Klasszikus találatok

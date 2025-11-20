@@ -1,6 +1,6 @@
 #file: services/rag/rag_service.py
 # RAG kereső szolgáltatás – embedding alapú hasonlóság keresés
-# Klasszikus RAG működés: cosine similarity, threshold, top-k visszaadás.
+# Bővítve: kategória-alapú embedding szűrés LLM felismerés alapján.
 
 from typing import List, Tuple
 import numpy as np
@@ -8,7 +8,7 @@ from django.db.models import QuerySet
 
 from services.embedding.embedding_service import EmbeddingService
 from services.ai_provider import get_ai_client
-from knowledge.models import KnowledgeEmbedding, KnowledgeChunk
+from knowledge.models import KnowledgeEmbedding, KnowledgeChunk, KnowledgeCategory
 
 
 # -------------------------------------------------------------------------
@@ -22,10 +22,7 @@ DEFAULT_SIMILARITY_THRESHOLD = 0.35
 # Koszinusz hasonlóság számítás
 # -------------------------------------------------------------------------
 def cosine_similarity(vec_a: List[float], vec_b: List[float]) -> float:
-    """
-    Két embedding vektor koszinusz hasonlóságát számítja ki.
-    Ha bármelyik vektor érvénytelen, 0.0 értéket ad vissza.
-    """
+    """Két embedding vektor koszinusz hasonlóságát számítja ki."""
     try:
         a = np.array(vec_a, dtype=float)
         b = np.array(vec_b, dtype=float)
@@ -45,28 +42,18 @@ def cosine_similarity(vec_a: List[float], vec_b: List[float]) -> float:
 class RAGService:
     """
     RAGService
-    ---------
-    Embedding alapú hasonlóság keresést végez a tudásbázis chunkjai között.
-    A keresési paraméterek (top_k és threshold) felhasználói oldalon állíthatók.
+    Embedding alapú hasonlóság keresés, kategória-alapú szűréssel bővítve.
     """
 
     def __init__(self, embedding_client=None):
-        """
-        Inicializálás:
-        - embedding_client: OpenAI vagy más embedding kliens
-        """
         if embedding_client is None:
-            # Alapértelmezés: OpenAI embedding
             embedding_client = get_ai_client("openai")
 
         self.embedding_service = EmbeddingService(embedding_client)
 
     # ---------------------------------------------------------------------
     def _get_query_embedding(self, query: str):
-        """
-        A felhasználói kérdés embeddingjének előállítása.
-        Hiba esetén None-t ad vissza.
-        """
+        """Felhasználói kérdés embeddingje."""
         try:
             return self.embedding_service.create_embedding(query)
         except Exception as e:
@@ -74,12 +61,22 @@ class RAGService:
             return None
 
     # ---------------------------------------------------------------------
+    def _get_embeddings_by_category(self, category_name: str) -> QuerySet:
+        """
+        Csak az adott kategóriához tartozó embeddingeket adja vissza.
+        """
+        try:
+            category = KnowledgeCategory.objects.get(name=category_name)
+        except KnowledgeCategory.DoesNotExist:
+            return KnowledgeEmbedding.objects.none()
+
+        return KnowledgeEmbedding.objects.select_related("chunk", "chunk__item") \
+            .filter(chunk__item__category=category)
+
+    # ---------------------------------------------------------------------
     def _get_all_embeddings(self) -> QuerySet:
-        """
-        Lekéri az összes chunk embeddinget.
-        Később egyszerűen lecserélhető Elasticsearch lekérésre.
-        """
-        return KnowledgeEmbedding.objects.select_related("chunk").all()
+        """Fallback: összes chunk embedding."""
+        return KnowledgeEmbedding.objects.select_related("chunk", "chunk__item").all()
 
     # ---------------------------------------------------------------------
     def search(
@@ -87,33 +84,43 @@ class RAGService:
         query: str,
         top_k: int = None,
         threshold: float = None,
+        category_name: str = None,
     ) -> List[Tuple[KnowledgeChunk, float]]:
         """
-        Embedding alapú keresés a chunkok között.
+        Embedding alapú keresés chunkok között – kategória-szűrés támogatással.
 
-        Visszatérés:
+        Paraméterek:
+            query (str): felhasználói kérdés
+            top_k (int)
+            threshold (float)
+            category_name (str): ha megadott, csak a kategória chunkjai között keres
+
+        Visszatér:
             List[(chunk_obj, similarity_score)]
         """
 
-        # Alapértelmezett paraméterek
         top_k = top_k or DEFAULT_TOP_K
         threshold = threshold or DEFAULT_SIMILARITY_THRESHOLD
 
         # ------------------------------------------------------------
-        # 1) Query embedding előállítása
+        # 1) Query embedding
         # ------------------------------------------------------------
         query_vector = self._get_query_embedding(query)
         if not query_vector:
             return []
 
         # ------------------------------------------------------------
-        # 2) Összes chunk embedding lekérése
+        # 2) Embeddingek lekérése kategória alapján
         # ------------------------------------------------------------
-        embeddings = self._get_all_embeddings()
+        if category_name:
+            embeddings = self._get_embeddings_by_category(category_name)
+        else:
+            embeddings = self._get_all_embeddings()
+
         scored_results = []
 
         # ------------------------------------------------------------
-        # 3) Similarity számítás chunkonként
+        # 3) Similarity számítás
         # ------------------------------------------------------------
         for emb in embeddings:
             try:
@@ -124,11 +131,11 @@ class RAGService:
             scored_results.append((emb.chunk, similarity))
 
         # ------------------------------------------------------------
-        # 4) Rangsorolás similarity alapján
+        # 4) Rendezés
         # ------------------------------------------------------------
         scored_results.sort(key=lambda x: x[1], reverse=True)
 
         # ------------------------------------------------------------
-        # 5) TOP-K visszaadás
+        # 5) TOP-K
         # ------------------------------------------------------------
         return scored_results[:top_k]
